@@ -16,7 +16,10 @@ const tableSelector = 'tbody'
 let currentPlaces: any[] = []
 
 const scrape = async () => {
-  const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox'] })
+  const browser = await puppeteer.launch({
+    headless: true,
+    args: ['--no-sandbox', '--disable-setuid-sandbox'],
+  })
   const page = await browser.newPage()
 
   await Promise.all([
@@ -53,9 +56,10 @@ const scrape = async () => {
   if (isArrEqual(currentPlaces, latestPlaces)) {
     return
   } else {
-    const newPlaces = latestPlaces.filter(
-      (place) => !currentPlaces.includes(place.id) && +place.size >= 3 // testing
-    )
+    const newPlaces = latestPlaces.filter((place) => {
+      const isNew = currentPlaces.every((cp) => cp.id !== place.id)
+      if (isNew && +place.size >= 3.5) return true // 3.5 for testing
+    })
 
     currentPlaces = latestPlaces
 
