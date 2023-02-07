@@ -79,6 +79,52 @@ const fetchEarthquakes = async () => {
   }
 }
 
+bot.onText(/\/suggest (.+)/, async (msg, match: any) => {
+	const chatId = msg.chat.id;
+	const resp = match[1];
+	const { username } = await bot.getChat(chatId);
+
+	await bot.sendMessage(
+		process.env.MOD_CHANNEL_ID!,
+		`<pre>${chatId}</pre>\nNew Suggestion from @${username}:\n\n${resp}`,
+		{ parse_mode: 'HTML' }
+	);
+
+	await bot.sendMessage(
+		chatId,
+		`سيتم الرد على رسالتك في اقرب وقت شكرا لتعاونكم.`
+	);
+});
+
+bot.onText(/\/helpus (.+)/, async (msg, match: any) => {
+	const chatId = msg.chat.id;
+	const resp = match[1];
+	const { username } = await bot.getChat(chatId);
+
+	await bot.sendMessage(
+		process.env.MOD_CHANNEL_ID!,
+		`<pre>${chatId}</pre>\n@${username} wants to help us:\n\n${resp}`,
+		{ parse_mode: 'HTML' }
+	);
+	await bot.sendMessage(
+		chatId,
+		`سيتم الرد على رسالتك في اقرب وقت شكرا لتعاونكم.`
+	);
+});
+
+bot.onText(/\/reply (.+)/, async (msg, match: any) => {
+	const chatId = msg.chat.id;
+	console.log(chatId, process.env.MOD_CHANNEL_ID);
+
+	if (`${chatId}` !== process.env.MOD_CHANNEL_ID) return;
+
+	const resp = match[1].split(' ');
+	const code = resp[0];
+	delete resp[0];
+
+	await bot.sendMessage(code, resp.join(' '));
+});
+
 const start = async () => {
   while (true) {
     try {
