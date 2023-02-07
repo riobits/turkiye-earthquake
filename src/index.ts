@@ -16,7 +16,7 @@ const tableSelector = 'tbody'
 let currentPlaces: any[] = []
 
 const scrape = async () => {
-  const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox'] })
+  const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox'] })
   const page = await browser.newPage()
 
   await Promise.all([
