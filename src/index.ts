@@ -54,7 +54,7 @@ const scrape = async () => {
     return
   } else {
     const newPlaces = latestPlaces.filter(
-      (place) => !currentPlaces.includes(place.id) && +place.size >= 5
+      (place) => !currentPlaces.includes(place.id) && +place.size >= 3 // testing
     )
 
     currentPlaces = latestPlaces
