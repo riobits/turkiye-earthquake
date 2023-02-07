@@ -83,7 +83,7 @@ const start = async () => {
   while (true) {
     try {
       await fetchEarthquakes()
-      await wait(4000)
+      await wait(30000)
     } catch (err) {
       console.error(err)
     }
