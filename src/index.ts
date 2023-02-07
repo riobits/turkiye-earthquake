@@ -1,82 +1,76 @@
 import 'dotenv/config'
-import puppeteer from 'puppeteer'
 import isArrEqual from './utils/isArrEqual'
 import TelegramBot from 'node-telegram-bot-api'
+import { currentDate, nextDate } from './utils/date'
+import wait from './utils/wait'
 
-// bot setup
+interface Earthquake {
+  country: string | null
+  date: string
+  depth: string
+  district: string | null
+  eventID: string
+  isEventUpdate: boolean
+  lastUpdateDate: string | null
+  latitude: string
+  location: string
+  longitude: string
+  magnitude: string
+  neighborhood: string | null
+  province: string | null
+  rms: string
+  type: string
+}
 
+// Bot setup
 const bot = new TelegramBot(process.env.TOKEN!, { polling: true })
 
-// scrapper
+// Getting latest data from the API
 
-const AFAD_WEBSITE = 'https://deprem.afad.gov.tr/last-earthquakes.html'
+const apiURL = (startDate: string, endDate: string) => {
+  return `https://deprem.afad.gov.tr/apiv2/event/filter?start=${startDate}&end=${endDate}&orderby=time&minmag=3.5`
+}
 
-const tableSelector = 'tbody'
+let currentEarthquakes: Earthquake[] = []
 
-let currentPlaces: any[] = []
+const fetchEarthquakes = async () => {
+  const URL = apiURL(currentDate(), nextDate())
+  console.log(URL)
 
-const scrape = async () => {
-  const browser = await puppeteer.launch({
-    headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox'],
-  })
-  const page = await browser.newPage()
+  const response = await fetch(URL)
+  const latestEarthquakes: Earthquake[] = await response.json()
 
-  await Promise.all([
-    page.goto(AFAD_WEBSITE),
-    page.waitForNavigation({ waitUntil: 'networkidle2' }),
-  ])
-
-  const latestPlaces = await page.evaluate((s) => {
-    const last3Elements = [
-      document.querySelector(s + ' > tr:nth-child(1)')!,
-      document.querySelector(s + ' > tr:nth-child(2)')!,
-      document.querySelector(s + ' > tr:nth-child(3)')!,
-    ]
-
-    return last3Elements.map((e) => {
-      const timestamp = e.querySelector('td:nth-child(1)')!.innerHTML.split(' ')
-      const size = e.querySelector('td:nth-child(6)')!.innerHTML
-      const city = e.querySelector('td:nth-child(7)')!.innerHTML
-      const id = e.querySelector('td:nth-last-child(1)')!.innerHTML
-
-      const date = timestamp[0]
-      const time = timestamp[1]
-
-      return {
-        date,
-        time,
-        size,
-        city,
-        id,
-      }
-    })
-  }, tableSelector)
-
-  if (isArrEqual(currentPlaces, latestPlaces)) {
+  if (isArrEqual(currentEarthquakes, latestEarthquakes)) {
+    return
+  } else if (currentEarthquakes.length === 0) {
+    currentEarthquakes = latestEarthquakes
     return
   } else {
-    const newPlaces = latestPlaces.filter((place) => {
-      const isNew = currentPlaces.every((cp) => cp.id !== place.id)
-      if (isNew && +place.size >= 3.5) return true // 3.5 for testing
+    const newEarthquakes = latestEarthquakes.filter((earthquake) => {
+      const isNew = currentEarthquakes.every(
+        (ce) => ce.eventID !== earthquake.eventID
+      )
+      if (isNew && +earthquake.magnitude >= 3.5) return true // 3.5 for testing
     })
 
-    currentPlaces = latestPlaces
+    currentEarthquakes = latestEarthquakes
 
-    newPlaces.forEach((place) => {
+    newEarthquakes.forEach((earthquake) => {
+      const timestamps = earthquake.date.split('T')
+      const date = timestamps[0]
+      const time = timestamps[1]
+
       let message = ''
 
       message += '<b>هزة ارضية جديدة</b>'
       message += '\n\n'
-      message += `تاريخ: ${place.date}`
+      message += `التاريخ: ${date}`
       message += '\n\n'
-      message += `الساعة: ${place.time}`
+      message += `الساعة: ${time}`
       message += '\n\n'
-      message += `<b>القوة: ${place.size}</b>`
+      message += `القوة: <b>${earthquake.magnitude}</b>`
       message += '\n\n'
-      message += 'المدينة:'
-      message += '\n'
-      message += place.city
+      message += `الولاية: ${earthquake.province}`
       message += '\n\n🇹🇷'
 
       bot.sendMessage(process.env.CHANNEL_ID!, message, {
@@ -84,10 +78,17 @@ const scrape = async () => {
       })
     })
   }
-
-  await browser.close()
 }
 
-setInterval(async () => {
-  await scrape()
-}, 1000 * 60)
+const start = async () => {
+  while (true) {
+    try {
+      await fetchEarthquakes()
+      await wait(10000)
+    } catch (err) {
+      console.error(err)
+    }
+  }
+}
+
+start()
