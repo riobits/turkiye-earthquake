@@ -28,14 +28,13 @@ const bot = new TelegramBot(process.env.TOKEN!, { polling: true })
 // Getting latest data from the API
 
 const apiURL = (startDate: string, endDate: string) => {
-  return `https://deprem.afad.gov.tr/apiv2/event/filter?start=${startDate}&end=${endDate}&orderby=time&minmag=3.5`
+  return `https://deprem.afad.gov.tr/apiv2/event/filter?start=${startDate}&end=${endDate}&orderby=time&minmag=5.0`
 }
 
 let currentEarthquakes: Earthquake[] = []
 
 const fetchEarthquakes = async () => {
   const URL = apiURL(currentDate(), nextDate())
-  console.log(URL)
 
   const response = await fetch(URL)
   const latestEarthquakes: Earthquake[] = await response.json()
@@ -84,7 +83,7 @@ const start = async () => {
   while (true) {
     try {
       await fetchEarthquakes()
-      await wait(10000)
+      await wait(4000)
     } catch (err) {
       console.error(err)
     }
