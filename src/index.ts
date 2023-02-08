@@ -9,13 +9,13 @@ import { Earthquake } from './types'
 dotenv.config({ path: '.env' })
 const botChannelId = process.env.CHANNEL_ID!
 const modChannelId = process.env.MOD_CHANNEL_ID!
-const token = process.env.MOD_CHANNEL_ID!
+const token = process.env.TOKEN!
 
 // Bot setup
 const bot = new TelegramBot(token, { polling: true })
 
 // Getting latest data from the API
-const minMagnitude = 3.0
+const minMagnitude = 5.0
 const apiURL = (startDate: string, endDate: string) => {
   return `https://deprem.afad.gov.tr/apiv2/event/filter?start=${startDate}&end=${endDate}&orderby=time&minmag=${minMagnitude}`
 }
@@ -81,11 +81,6 @@ const fetchEarthquakes = async () => {
 bot.on('polling_error', async (err) => {
   console.log('polling error:')
   console.error(err)
-  await bot.sendMessage(
-    modChannelId,
-    'There is an error, check the console for more info.'
-  )
-  await bot.sendMessage(modChannelId, err.message)
 })
 
 bot.onText(/\/suggest (.+)/, async (msg, match: any) => {
