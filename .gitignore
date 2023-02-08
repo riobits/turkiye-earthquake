@@ -3,5 +3,5 @@ node_modules
 dist
 
 # files
-.env
+*.env
 {XDG_CONFIG_HOME}

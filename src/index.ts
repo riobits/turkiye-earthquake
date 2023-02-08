@@ -1,18 +1,21 @@
-import 'dotenv/config'
-import isArrEqual from './utils/isArrEqual'
+import dotenv from 'dotenv'
 import TelegramBot from 'node-telegram-bot-api'
-import { currentDate, fixTime, nextDate } from './utils/date'
+import isArrEqual from './utils/isArrEqual'
 import wait from './utils/wait'
+import { currentDate, fixTime, nextDate } from './utils/date'
 import { Earthquake } from './types'
 
-// Bot setup
-const bot = new TelegramBot(process.env.TOKEN!, { polling: true })
-
-// Getting latest data from the API
-
+// enviorment variables
+dotenv.config({ path: '.env' })
 const botChannelId = process.env.CHANNEL_ID!
 const modChannelId = process.env.MOD_CHANNEL_ID!
-const minMagnitude = 5.0
+const token = process.env.MOD_CHANNEL_ID!
+
+// Bot setup
+const bot = new TelegramBot(token, { polling: true })
+
+// Getting latest data from the API
+const minMagnitude = 3.0
 const apiURL = (startDate: string, endDate: string) => {
   return `https://deprem.afad.gov.tr/apiv2/event/filter?start=${startDate}&end=${endDate}&orderby=time&minmag=${minMagnitude}`
 }
