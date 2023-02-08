@@ -15,7 +15,7 @@ const token = process.env.MOD_CHANNEL_ID!
 const bot = new TelegramBot(token, { polling: true })
 
 // Getting latest data from the API
-const minMagnitude = 3.0
+const minMagnitude = 5.0
 const apiURL = (startDate: string, endDate: string) => {
   return `https://deprem.afad.gov.tr/apiv2/event/filter?start=${startDate}&end=${endDate}&orderby=time&minmag=${minMagnitude}`
 }
