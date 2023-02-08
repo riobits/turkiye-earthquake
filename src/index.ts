@@ -81,7 +81,7 @@ bot.onText(/\/suggest (.+)/, async (msg, match: any) => {
   const { username } = await bot.getChat(chatId)
 
   await bot.sendMessage(
-    process.env.MOD_CHANNEL_ID!,
+    modChannelId!,
     `<pre>${chatId}</pre>\nNew Suggestion from @${username}:\n\n${resp}`,
     { parse_mode: 'HTML' }
   )
