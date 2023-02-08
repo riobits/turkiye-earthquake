@@ -1,34 +1,20 @@
 import 'dotenv/config'
 import isArrEqual from './utils/isArrEqual'
 import TelegramBot from 'node-telegram-bot-api'
-import { currentDate, nextDate } from './utils/date'
+import { currentDate, fixTime, nextDate } from './utils/date'
 import wait from './utils/wait'
-
-interface Earthquake {
-  country: string | null
-  date: string
-  depth: string
-  district: string | null
-  eventID: string
-  isEventUpdate: boolean
-  lastUpdateDate: string | null
-  latitude: string
-  location: string
-  longitude: string
-  magnitude: string
-  neighborhood: string | null
-  province: string | null
-  rms: string
-  type: string
-}
+import { Earthquake } from './types'
 
 // Bot setup
 const bot = new TelegramBot(process.env.TOKEN!, { polling: true })
 
 // Getting latest data from the API
 
+const botChannelId = process.env.CHANNEL_ID!
+const modChannelId = process.env.MOD_CHANNEL_ID!
+const minMagnitude = 5.0
 const apiURL = (startDate: string, endDate: string) => {
-  return `https://deprem.afad.gov.tr/apiv2/event/filter?start=${startDate}&end=${endDate}&orderby=time&minmag=5.0`
+  return `https://deprem.afad.gov.tr/apiv2/event/filter?start=${startDate}&end=${endDate}&orderby=time&minmag=${minMagnitude}`
 }
 
 let currentEarthquakes: Earthquake[] = []
@@ -49,7 +35,7 @@ const fetchEarthquakes = async () => {
       const isNew = currentEarthquakes.every(
         (ce) => ce.eventID !== earthquake.eventID
       )
-      if (isNew && +earthquake.magnitude >= 5.0) return true
+      if (isNew && +earthquake.magnitude >= minMagnitude) return true
     })
 
     currentEarthquakes = latestEarthquakes
@@ -57,7 +43,7 @@ const fetchEarthquakes = async () => {
     newEarthquakes.forEach((earthquake) => {
       const timestamps = earthquake.date.split('T')
       const date = timestamps[0]
-      const time = timestamps[1]
+      const time = fixTime(timestamps[1])
 
       let message = ''
 
@@ -72,58 +58,68 @@ const fetchEarthquakes = async () => {
       message += `الولاية: ${earthquake.province}`
       message += '\n\n🇹🇷'
 
-      bot.sendMessage(process.env.CHANNEL_ID!, message, {
+      bot.sendMessage(botChannelId, message, {
         parse_mode: 'HTML',
       })
     })
   }
 }
 
+bot.on('polling_error', async (err) => {
+  console.log('polling error:')
+  console.error(err)
+  await bot.sendMessage(
+    modChannelId,
+    'There is an error, check the console for more info.'
+  )
+  await bot.sendMessage(modChannelId, err.message)
+})
+
 bot.onText(/\/suggest (.+)/, async (msg, match: any) => {
-	const chatId = msg.chat.id;
-	const resp = match[1];
-	const { username } = await bot.getChat(chatId);
+  const chatId = msg.chat.id
+  const resp = match[1]
+  const { username } = await bot.getChat(chatId)
 
-	await bot.sendMessage(
-		process.env.MOD_CHANNEL_ID!,
-		`<pre>${chatId}</pre>\nNew Suggestion from @${username}:\n\n${resp}`,
-		{ parse_mode: 'HTML' }
-	);
+  await bot.sendMessage(
+    process.env.MOD_CHANNEL_ID!,
+    `<pre>${chatId}</pre>\nNew Suggestion from @${username}:\n\n${resp}`,
+    { parse_mode: 'HTML' }
+  )
 
-	await bot.sendMessage(
-		chatId,
-		`سيتم الرد على رسالتك في اقرب وقت شكرا لتعاونكم.`
-	);
-});
+  await bot.sendMessage(
+    chatId,
+    `سيتم الرد على رسالتك في اقرب وقت شكرا لتعاونكم.`
+  )
+})
 
 bot.onText(/\/helpus (.+)/, async (msg, match: any) => {
-	const chatId = msg.chat.id;
-	const resp = match[1];
-	const { username } = await bot.getChat(chatId);
+  const chatId = msg.chat.id
+  const resp = match[1]
+  const { username } = await bot.getChat(chatId)
 
-	await bot.sendMessage(
-		process.env.MOD_CHANNEL_ID!,
-		`<pre>${chatId}</pre>\n@${username} wants to help us:\n\n${resp}`,
-		{ parse_mode: 'HTML' }
-	);
-	await bot.sendMessage(
-		chatId,
-		`سيتم الرد على رسالتك في اقرب وقت شكرا لتعاونكم.`
-	);
-});
+  await bot.sendMessage(
+    modChannelId!,
+    `<pre>${chatId}</pre>\n@${username} wants to help us:\n\n${resp}`,
+    { parse_mode: 'HTML' }
+  )
+  await bot.sendMessage(
+    chatId,
+    `سيتم الرد على رسالتك في اقرب وقت شكرا لتعاونكم.`
+  )
+})
 
 bot.onText(/\/reply (.+)/, async (msg, match: any) => {
-	const chatId = msg.chat.id;
-	console.log(chatId, process.env.MOD_CHANNEL_ID);
+  const chatId = msg.chat.id
+  console.log(chatId, modChannelId)
 
-	if (`${chatId}` !== process.env.MOD_CHANNEL_ID) return;
+  if (`${chatId}` !== modChannelId) return
 
-	const resp = match[1].split(' ');
-	const code = resp[0];
-	delete resp[0];
+  const resp = match[1].split(' ')
+  const code = resp[0]
+  delete resp[0]
 
-	await bot.sendMessage(code, resp.join(' '));
-});
+  await bot.sendMessage(code, resp.join(' '))
+})
 
 const start = async () => {
   while (true) {
