@@ -40,7 +40,7 @@ const fetchEarthquakes = async () => {
 
     currentEarthquakes = latestEarthquakes
 
-    newEarthquakes.forEach((earthquake) => {
+    for(const earthquake of newEarthquakes) {
       const timestamps = earthquake.date.split('T')
       const date = timestamps[0]
       const time = fixTime(timestamps[1])
@@ -60,8 +60,8 @@ const fetchEarthquakes = async () => {
 
       await bot.sendMessage(botChannelId, message, {
         parse_mode: 'HTML',
-      })
-    })
+      }) 
+    }
   }
 }
 
