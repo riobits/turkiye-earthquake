@@ -58,7 +58,7 @@ const fetchEarthquakes = async () => {
       message += `الولاية: ${earthquake.province}`
       message += '\n\n🇹🇷'
 
-      bot.sendMessage(botChannelId, message, {
+      await bot.sendMessage(botChannelId, message, {
         parse_mode: 'HTML',
       })
     })
