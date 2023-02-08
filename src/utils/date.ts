@@ -31,7 +31,11 @@ export const nextDate = () => {
 export const fixTime = (time: string) => {
   let date = new Date('1970-01-01 ' + time)
   date.setHours(date.getHours() + 3)
-  let result = date.toLocaleTimeString()
-
+  let result = date.toLocaleTimeString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+  })
   return result
 }
