@@ -21,6 +21,7 @@ const apiURL = (startDate: string, endDate: string) => {
 }
 
 let currentEarthquakes: Earthquake[] = []
+let initialFetch = true
 
 const fetchEarthquakes = async () => {
   try {
@@ -29,43 +30,46 @@ const fetchEarthquakes = async () => {
     const response = await fetch(URL)
     const latestEarthquakes: Earthquake[] = await response.json()
 
-    if (isArrEqual(currentEarthquakes, latestEarthquakes)) {
-      return
-    } else if (currentEarthquakes.length === 0) {
+    const isDataEqual = isArrEqual(currentEarthquakes, latestEarthquakes)
+
+    if (isDataEqual) return
+
+    if (initialFetch) {
       currentEarthquakes = latestEarthquakes
+      initialFetch = false
       return
-    } else {
-      const newEarthquakes = latestEarthquakes.filter((earthquake) => {
-        const isNew = currentEarthquakes.every(
-          (ce) => ce.eventID !== earthquake.eventID
-        )
-        if (isNew && +earthquake.magnitude >= minMagnitude) return true
+    }
+
+    const newEarthquakes = latestEarthquakes.filter((earthquake) => {
+      const isNew = currentEarthquakes.every(
+        (ce) => ce.eventID !== earthquake.eventID
+      )
+      if (isNew && +earthquake.magnitude >= minMagnitude) return true
+    })
+
+    currentEarthquakes = latestEarthquakes
+
+    for (const earthquake of newEarthquakes) {
+      const timestamps = earthquake.date.split('T')
+      const date = timestamps[0]
+      const time = fixTime(timestamps[1])
+
+      let message = ''
+
+      message += '<b>هزة ارضية جديدة</b>'
+      message += '\n\n'
+      message += `التاريخ: ${date}`
+      message += '\n\n'
+      message += `الساعة: ${time}`
+      message += '\n\n'
+      message += `القوة: <b>${earthquake.magnitude}</b>`
+      message += '\n\n'
+      message += `الولاية: ${earthquake.province}`
+      message += '\n\n🇹🇷'
+
+      await bot.sendMessage(botChannelId, message, {
+        parse_mode: 'HTML',
       })
-
-      currentEarthquakes = latestEarthquakes
-
-      for (const earthquake of newEarthquakes) {
-        const timestamps = earthquake.date.split('T')
-        const date = timestamps[0]
-        const time = fixTime(timestamps[1])
-
-        let message = ''
-
-        message += '<b>هزة ارضية جديدة</b>'
-        message += '\n\n'
-        message += `التاريخ: ${date}`
-        message += '\n\n'
-        message += `الساعة: ${time}`
-        message += '\n\n'
-        message += `القوة: <b>${earthquake.magnitude}</b>`
-        message += '\n\n'
-        message += `الولاية: ${earthquake.province}`
-        message += '\n\n🇹🇷'
-
-        await bot.sendMessage(botChannelId, message, {
-          parse_mode: 'HTML',
-        })
-      }
     }
   } catch (err: any) {
     console.error('Error while fetching earthquakes:')
