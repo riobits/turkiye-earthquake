@@ -83,22 +83,67 @@ bot.on('polling_error', async (err) => {
   console.error(err)
 })
 
+bot.onText(/\/start/, async (msg, match: any) => {
+	const chatId = msg.chat.id;
+	const resp = match[1];
+	const { username } = await bot.getChat(chatId);
+
+	await bot.sendMessage(
+		chatId,
+		`السلام عليكم, يرجى إرسال الرسائل المتعلقة بالإقتراحات عن طريق ` +
+			`/suggest\n` +
+			`وإن أردتم ان تساعدونا بأي شكل من الأشكال يرجى إرسالها عن طريق ` +
+			`/helpus`,
+		{
+			parse_mode: 'HTML',
+		}
+	);
+});
+
+bot.onText(/^\/suggest$/, async (msg, match: any) => {
+	const chatId = msg.chat.id;
+	const resp = match[1];
+	const { username } = await bot.getChat(chatId);
+
+	await bot.sendMessage(
+		chatId,
+		`يرجى إرسال الرسائل بهذا الشكل: \n` + `/suggest لدي اقتراح بما يخض...`,
+		{
+			parse_mode: 'HTML',
+		}
+	);
+});
+
 bot.onText(/\/suggest (.+)/, async (msg, match: any) => {
-  const chatId = msg.chat.id
-  const resp = match[1]
-  const { username } = await bot.getChat(chatId)
+	const chatId = msg.chat.id;
+	const resp = match[1];
+	const { username } = await bot.getChat(chatId);
 
-  await bot.sendMessage(
-    modChannelId!,
-    `<pre>${chatId}</pre>\nNew Suggestion from @${username}:\n\n${resp}`,
-    { parse_mode: 'HTML' }
-  )
+	await bot.sendMessage(
+		modChannelId!,
+		`<pre>${chatId}</pre>\nNew Suggestion from @${username}:\n\n${resp}`,
+		{ parse_mode: 'HTML' }
+	);
 
-  await bot.sendMessage(
-    chatId,
-    `سيتم الرد على رسالتك في اقرب وقت شكرا لتعاونكم.`
-  )
-})
+	await bot.sendMessage(
+		chatId,
+		`سيتم الرد على رسالتك في اقرب وقت شكرا لتعاونكم.`
+	);
+});
+
+bot.onText(/^\/helpus$/, async (msg, match: any) => {
+	const chatId = msg.chat.id;
+	const resp = match[1];
+	const { username } = await bot.getChat(chatId);
+
+	await bot.sendMessage(
+		chatId,
+		`يرجى إرسال الرسائل بهذا الشكل: \n` + `/helpus أردت أن أساعدكم ب...`,
+		{
+			parse_mode: 'HTML',
+		}
+	);
+});
 
 bot.onText(/\/helpus (.+)/, async (msg, match: any) => {
   const chatId = msg.chat.id
