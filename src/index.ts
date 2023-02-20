@@ -69,6 +69,7 @@ const fetchEarthquakes = async () => {
 
       await bot.sendMessage(botChannelId, message, {
         parse_mode: 'HTML',
+        disable_web_page_preview: true,
       })
     }
   } catch (err: any) {
