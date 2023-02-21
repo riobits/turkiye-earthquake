@@ -44,7 +44,7 @@ const fetchEarthquakes = async () => {
       const isNew = currentEarthquakes.every(
         (ce) => ce.eventID !== earthquake.eventID
       )
-      if (isNew && +earthquake.magnitude >= minMagnitude) return true
+      return isNew
     })
 
     currentEarthquakes = latestEarthquakes
